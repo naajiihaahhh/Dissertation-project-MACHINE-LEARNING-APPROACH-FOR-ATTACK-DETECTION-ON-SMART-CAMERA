@@ -48,12 +48,12 @@ print('XGBoost model accuracy score: {0:0.4f}'. format(accuracy_score(y_test, y_
 
 
 
-# Cross-validation
-dtrain = xgb.DMatrix(data=X_train, label=y_train)  # Prepare data for cross-validation
-xgb_cv = xgb.cv(dtrain=dtrain, params=params, nfold=3,
-                num_boost_round=50, early_stopping_rounds=10, metrics="mlogloss", as_pandas=True, seed=123)
-
-print(xgb_cv.head())
+# # Cross-validation
+# dtrain = xgb.DMatrix(data=X_train, label=y_train)  # Prepare data for cross-validation
+# xgb_cv = xgb.cv(dtrain=dtrain, params=params, nfold=3,
+#                 num_boost_round=50, early_stopping_rounds=10, metrics="mlogloss", as_pandas=True, seed=123)
+#
+# print(xgb_cv.head())
 
 # plot graph of the importance
 xgb.plot_importance(xgb_clf)
@@ -135,4 +135,129 @@ plt.ylim(0.9, 1.0)  # Set y-axis range for better visualization
 for i, v in enumerate(values):
     plt.text(i, v + 0.005, f"{v:.2f}", ha='center', fontsize=12)
 
+plt.show()
+
+
+# from sklearn.model_selection import RandomizedSearchCV
+# from xgboost import XGBClassifier
+#
+# param_dist = {
+#     'max_depth': [4, 6, 8, 10],
+#     'learning_rate': [0.01, 0.05, 0.1, 0.2],
+#     'n_estimators': [100, 200, 300],
+#     'subsample': [0.6, 0.8, 1.0],
+#     'colsample_bytree': [0.6, 0.8, 1.0],
+#     'gamma': [0, 0.1, 0.3, 0.5],
+#     'reg_alpha': [0, 0.1, 1, 10],
+#     'reg_lambda': [0, 1, 10]
+# }
+#
+# xgb_model = XGBClassifier(objective='multi:softmax', num_class=num_classes, use_label_encoder=False)
+#
+# random_search = RandomizedSearchCV(
+#     estimator=xgb_model,
+#     param_distributions=param_dist,
+#     scoring='accuracy',
+#     n_iter=50,  # increase if time permits
+#     cv=3,
+#     verbose=2,
+#     n_jobs=-1,
+#     random_state=42
+# )
+#
+# random_search.fit(X_train, y_train)
+#
+# # Evaluate
+# print("Best Parameters:", random_search.best_params_)
+# print("Best Accuracy:", random_search.best_score_)
+#
+# best_model = random_search.best_estimator_
+# y_pred = best_model.predict(X_test)
+# print("Test Accuracy with best params:", accuracy_score(y_test, y_pred))
+
+best_params = {
+    'max_depth': 6,
+    'learning_rate': 0.1,
+    'n_estimators': 200,
+    'subsample': 0.8,
+    'colsample_bytree': 0.8,
+    'gamma': 0.1,
+    'reg_alpha': 0.1,
+    'reg_lambda': 1
+}
+from xgboost import XGBClassifier
+
+
+# Use pre-found best hyperparameters
+model = XGBClassifier(
+    objective='multi:softmax',
+    num_class=num_classes,
+    use_label_encoder=False,
+    eval_metric='mlogloss',
+    **best_params
+)
+
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+print("Test Accuracy with best params:", accuracy_score(y_test, y_pred))
+
+
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=np.unique(y_train),
+            yticklabels=np.unique(y_train))
+plt.title('Confusion Matrix - Tuned XGBoost')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.tight_layout()
+plt.show()
+report_dict = classification_report(y_test, y_pred, output_dict=True)
+
+labels = list(report_dict.keys())[:num_classes]
+precision = [report_dict[label]['precision'] for label in labels]
+recall = [report_dict[label]['recall'] for label in labels]
+f1 = [report_dict[label]['f1-score'] for label in labels]
+
+x = np.arange(len(labels))
+width = 0.2
+
+fig, ax = plt.subplots(figsize=(8, 5))
+bars1 = ax.bar(x - width, precision, width, label='Precision')
+bars2 = ax.bar(x, recall, width, label='Recall')
+bars3 = ax.bar(x + width, f1, width, label='F1-score')
+
+ax.set_xticks(x)
+ax.set_xticklabels([f'Class {label}' for label in labels])
+ax.set_ylim([0, 1.1])
+ax.set_title("Classification Report Metrics - Tuned Model")
+ax.legend()
+
+# Add value labels on top
+for bars in [bars1, bars2, bars3]:
+    for bar in bars:
+        height = bar.get_height()
+        ax.annotate(f'{height:.2f}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                    xytext=(0, 3), textcoords="offset points",
+                    ha='center', va='bottom')
+
+plt.tight_layout()
+plt.show()
+accuracy = accuracy_score(y_test, y_pred)
+macro_avg = report_dict['macro avg']['f1-score']
+weighted_avg = report_dict['weighted avg']['f1-score']
+
+plt.figure(figsize=(6, 4))
+plt.bar(['Accuracy', 'Macro Avg', 'Weighted Avg'],
+        [accuracy, macro_avg, weighted_avg],
+        color=['blue', 'orange', 'green'])
+
+plt.ylim(0.85, 1.0)
+plt.title('Tuned XGBoost - Accuracy & Averages')
+
+for i, v in enumerate([accuracy, macro_avg, weighted_avg]):
+    plt.text(i, v + 0.005, f"{v:.2f}", ha='center', fontsize=12)
+
+plt.tight_layout()
 plt.show()
