@@ -140,5 +140,7 @@ y_pred_tuned = tuned_rf.predict(X_test)
 print("Accuracy (Tuned RF): {:.4f}".format(accuracy_score(y_test, y_pred_tuned)))
 evaluate_model(y_test, y_pred_tuned, label_encoder, title="Random Forest - Tuned Model")
 
-
+# Save tuned Random Forest model
+with open('Random_Forest_tuned.pkl', 'wb') as file:
+    pickle.dump(tuned_rf, file)
 

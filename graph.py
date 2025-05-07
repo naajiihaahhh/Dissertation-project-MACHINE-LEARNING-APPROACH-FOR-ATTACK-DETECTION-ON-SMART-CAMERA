@@ -128,3 +128,69 @@ add_value_labels(bars3)  # F1 Score bars (default 2 decimals)
 # Display the plot
 plt.tight_layout()
 plt.show()
+import matplotlib.pyplot as plt
+
+model_names = ['Random Forest', 'XGBoost', 'Decision tree']
+accuracies = [0.9891, 0.9883, 0.9889]
+
+# Plotting
+plt.figure(figsize=(8, 5))
+bars = plt.bar(model_names, accuracies, color=['blue', 'orange', 'green'])
+plt.ylim(0.95, 1.0)
+plt.ylabel('Accuracy (%)')
+plt.title('Model Accuracy Comparison')
+
+# Add percentage labels on bars
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2.0, yval + 0.002, f'{yval*100:.2f}%', ha='center', fontsize=12)
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+
+
+import matplotlib.pyplot as plt
+
+model_names = ['Random Forest', 'XGBoost', 'Decision tree']
+false_negatives = [403, 405, 407]  # counts, not rates
+
+# Plotting
+plt.figure(figsize=(8, 5))
+bars = plt.bar(model_names, false_negatives, color=['blue', 'orange', 'green'])
+plt.ylabel('False Positives')
+plt.title('False Positives for Normal Class')
+plt.ylim(300, 500)  # <-- Adjusted scale here
+
+# Add count labels on bars
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2.0, yval + 5, f'{int(yval)}', ha='center', fontsize=12)
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+
+
+import matplotlib.pyplot as plt
+
+model_names = ['Random Forest', 'XGBoost', 'Decision tree']
+false_negatives_usability = [20, 92, 22]  # counts, not rates
+
+# Plotting
+plt.figure(figsize=(8, 5))
+bars = plt.bar(model_names, false_negatives_usability, color=['blue', 'orange', 'green'])
+plt.ylabel('False Negatives')
+plt.title('False Negatives for Attack Class')
+plt.ylim(0, max(false_negatives_usability) + 50)  # Adjust scale to fit all bars
+
+# Add count labels on bars
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2.0, yval + 5, f'{int(yval)}', ha='center', fontsize=12)
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
